@@ -81,7 +81,7 @@ export interface ConversationTurn {
 export class ApiService {
   ngZone = inject(NgZone);
   private readonly http = inject(HttpClient);
-  private apiUrl = '';
+  private apiUrl = environment.apiLangChainJsServer.url;
   chatStreamState = new BehaviorSubject<Partial<ChatStreamState>>({});
 
  // Track both position and incomplete JSON
@@ -124,7 +124,7 @@ export class ApiService {
   }
 
   setApiUrl(url: string) {
-    this.apiUrl = url;
+    this.apiUrl = url.trim() || environment.apiLangChainJsServer.url;
   }
 
   async initializeApiUrlToDefault() {
