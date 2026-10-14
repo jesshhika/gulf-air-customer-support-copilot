@@ -89,20 +89,22 @@ export class ApiService {
   private incompleteJsonBuffer = '';
 
   async getAvailableApiUrls(): Promise<{ label: string; url: string, isOnline: boolean }[]> {
-    return [
+    const configuredApis = [
       {
         ...environment.apiLangChainJsServer,
-        isOnline: await this.checkApiHealth(environment.apiLangChainJsServer.url),
       },
       {
         ...environment.apiLlamaIndexTsServer,
-        isOnline: await this.checkApiHealth(environment.apiLlamaIndexTsServer.url),
       },
       {
         ...environment.apiMafPythonServer,
-        isOnline: await this.checkApiHealth(environment.apiMafPythonServer.url),
       },
-    ];
+    ].filter(api => api.url.trim().length > 0);
+
+    return Promise.all(configuredApis.map(async api => ({
+      ...api,
+      isOnline: await this.checkApiHealth(api.url),
+    })));
   }
 
   private async checkApiHealth(url: string): Promise<boolean> {
