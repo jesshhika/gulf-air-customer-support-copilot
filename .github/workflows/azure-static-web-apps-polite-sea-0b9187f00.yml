@@ -28,9 +28,10 @@ jobs:
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "./packages" # App source code path
+          app_location: "./packages/ui-angular" # Angular app source
           api_location: "" # Api source code path - optional
-          output_location: "dist/app" # Built app content directory - optional
+          app_build_command: "NG_APP_ENV=production NG_API_URL_LANGCHAIN_JS=https://gulf-air-api-g8dfcka8cfd6e9b9.southindia-01.azurewebsites.net npx ng build --configuration production && cp dist/app/browser/index.csr.html dist/app/browser/index.html"
+          output_location: "dist/app/browser" # Angular browser bundle
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
