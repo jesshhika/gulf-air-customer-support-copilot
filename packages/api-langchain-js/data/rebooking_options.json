@@ -1,0 +1,45 @@
+[
+  {
+    "route": "BAH-DXB",
+    "alternatives": [
+      {
+        "flightNumber": "GF212",
+        "departure": "18:30"
+      },
+      {
+        "flightNumber": "GF214",
+        "departure": "22:00"
+      },
+      {
+        "flightNumber": "GF216",
+        "departure": "08:00"
+      }
+    ]
+  },
+  {
+    "route": "BAH-LHR",
+    "alternatives": [
+      {
+        "flightNumber": "GF124",
+        "departure": "09:00"
+      },
+      {
+        "flightNumber": "GF126",
+        "departure": "17:30"
+      }
+    ]
+  },
+  {
+    "route": "BAH-JED",
+    "alternatives": [
+      {
+        "flightNumber": "GF452",
+        "departure": "19:00"
+      },
+      {
+        "flightNumber": "GF454",
+        "departure": "22:30"
+      }
+    ]
+  }
+]

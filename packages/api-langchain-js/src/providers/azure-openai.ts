@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "@langchain/openai";
+import { AzureChatOpenAI } from "@langchain/openai";
 import {
   DefaultAzureCredential,
   getBearerTokenProvider,
@@ -11,68 +11,82 @@ const AZURE_COGNITIVE_SERVICES_SCOPE =
 export const llm = async () => {
   console.log("Using Azure OpenAI");
 
-  const isRunningInLocalDocker = process.env.IS_LOCAL_DOCKER_ENV === "true";
+  const isRunningInLocalDocker =
+    process.env.IS_LOCAL_DOCKER_ENV === "true";
+
+  console.log(
+    "Azure Endpoint:",
+    process.env.AZURE_OPENAI_ENDPOINT
+  );
+
+  console.log(
+    "Azure Deployment:",
+    process.env.AZURE_OPENAI_DEPLOYMENT_NAME
+  );
+
+  console.log(
+    "Azure API Version:",
+    process.env.AZURE_OPENAI_API_VERSION
+  );
 
   if (isRunningInLocalDocker) {
-    // running in local Docker environment
     console.log(
-      "Running in local Docker environment, Azure Managed Identity is not supported. Authenticating with apiKey."
+      "Running in local Docker environment, using Azure OpenAI API Key authentication."
     );
 
-    // return new AzureChatOpenAI({
-    //   azureOpenAIEndpoint: process.env.AZURE_OPENAI_ENDPOINT,
-    //   azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_DEPLOYMENT,
-    //   azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
-    //   temperature: 0,
-    // });
+    return new AzureChatOpenAI({
+      azureOpenAIApiKey:
+        process.env.AZURE_OPENAI_API_KEY,
 
-    const token = process.env.AZURE_OPENAI_API_KEY;
-    return new ChatOpenAI({
-      configuration: {
-        baseURL: process.env.AZURE_OPENAI_ENDPOINT,
-      },
-      modelName: process.env.AZURE_OPENAI_DEPLOYMENT_NAME ?? "gpt-5",
+      azureOpenAIApiDeploymentName:
+        process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+
+      azureOpenAIApiVersion:
+        process.env.AZURE_OPENAI_API_VERSION,
+
+      azureOpenAIEndpoint:
+        process.env.AZURE_OPENAI_ENDPOINT,
+
+      temperature: 0,
       streaming: true,
-      useResponsesApi: true,
-      apiKey: token,
-      verbose: true,
     });
   }
 
-  // Set up Azure AD authentication for production
   let credential: any = new DefaultAzureCredential();
+
   const clientId = process.env.AZURE_CLIENT_ID;
+
   if (clientId) {
-    // running in production with a specific client ID
     console.log("Using Azure Client ID:", clientId);
+
     credential = new ManagedIdentityCredential({
       clientId,
     });
   }
 
-  // Create the token provider function that will be called on every request
-  const azureADTokenProvider = getBearerTokenProvider(
-    credential,
-    AZURE_COGNITIVE_SERVICES_SCOPE
-  );
+  const azureADTokenProvider =
+    getBearerTokenProvider(
+      credential,
+      AZURE_COGNITIVE_SERVICES_SCOPE
+    );
 
   console.log(
-    "Using Azure OpenAI Endpoint:",
-    process.env.AZURE_OPENAI_ENDPOINT
-  );
-  console.log(
-    "Using Azure OpenAI Deployment Name:",
-    process.env.AZURE_OPENAI_DEPLOYMENT_NAME
+    "Using Azure Managed Identity authentication."
   );
 
-  return new ChatOpenAI({
-    configuration: {
-      baseURL: process.env.AZURE_OPENAI_ENDPOINT,
-    },
-    modelName: process.env.AZURE_OPENAI_DEPLOYMENT_NAME ?? "gpt-5",
+  return new AzureChatOpenAI({
+    azureADTokenProvider,
+
+    azureOpenAIEndpoint:
+      process.env.AZURE_OPENAI_ENDPOINT,
+
+    azureOpenAIApiDeploymentName:
+      process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+
+    azureOpenAIApiVersion:
+      process.env.AZURE_OPENAI_API_VERSION,
+
+    temperature: 0,
     streaming: true,
-    useResponsesApi: true,
-    apiKey: await azureADTokenProvider(),
-    verbose: true,
   });
 };

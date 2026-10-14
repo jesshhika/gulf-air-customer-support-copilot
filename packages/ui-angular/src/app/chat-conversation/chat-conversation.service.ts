@@ -1,11 +1,13 @@
 import { Injectable, signal } from '@angular/core';
-import { marked } from 'marked';
+
 import { toast } from 'ngx-sonner';
 import { BehaviorSubject } from 'rxjs';
 import {
   ApiService,
   ChatEvent,
   ChatMessage,
+  ConversationTurn,
+  SupportContext,
   Tools,
 } from '../services/api.service';
 
@@ -14,8 +16,7 @@ import {
 })
 export class ChatService {
   userMessage = signal('');
-  private _lastMessageContent$ = new BehaviorSubject<string>('');
-  lastMessageContent$ = this._lastMessageContent$.asObservable();
+  
 
   messagesStream = new BehaviorSubject<ChatMessage[]>([]);
   private messagesBuffer: ChatMessage[] = [];
@@ -26,6 +27,7 @@ export class ChatService {
   agent = signal<string | null>(null);
   assistantMessageInProgress = signal(false);
   agentMessageBuffer: string = '';
+  supportContext = signal<SupportContext>({});
 
   constructor(private apiService: ApiService) {}
 
@@ -44,6 +46,10 @@ export class ChatService {
     this.apiService.setApiUrl(url);
   }
 
+  setSupportContext(context: SupportContext) {
+    this.supportContext.set(context);
+  }
+
   async sendMessage(event: Event) {
     if ((event as KeyboardEvent).shiftKey) {
       return;
@@ -51,6 +57,11 @@ export class ChatService {
 
     const messageText = this.userMessage();
     if (!messageText.trim()) return;
+
+    const conversationHistory: ConversationTurn[] = this.messagesBuffer
+      .filter((message) => message.content.trim())
+      .slice(-8)
+      .map((message) => ({ role: message.role, content: message.content }));
 
     this.messagesBuffer.push({
       role: 'user',
@@ -66,13 +77,17 @@ export class ChatService {
     this.apiService
       .stream(
         messageText,
-        this.tools().filter((tool) => tool.selected)
+        this.tools().filter((tool) => tool.selected),
+        this.supportContext(),
+        conversationHistory
       )
       .subscribe({
         next: (state) => {
           switch (state.type) {
             case 'START':
               this.agentEventsBuffer = [];
+              // Always create a fresh assistant message
+              this.messagesBuffer = [...this.messagesBuffer];
               const message: ChatMessage = {
                 role: 'assistant',
                 content: '',
@@ -80,18 +95,23 @@ export class ChatService {
                 timestamp: new Date(),
               };
               this.messagesBuffer.push(message);
+
+            
+
               this.messagesStream.next(this.messagesBuffer);
-              this._lastMessageContent$.next('');
+              
               break;
 
             case 'END':
-              this.updateAndNotifyAgentChatMessageState('', {
-                metadata: {
-                  events: this.agentEventsBuffer,
-                },
-              });
-              break;
+  this.isLoading.set(false);
 
+  this.updateAndNotifyAgentChatMessageState('', {
+    metadata: {
+      events: this.agentEventsBuffer,
+    },
+  });
+
+  break;
             case 'MESSAGE':
               this.processAgentEvents(state.event);
               break;
@@ -166,24 +186,45 @@ export class ChatService {
         case 'llamaindex-stop':
 
         // Microsoft Agent Framework (MAF) events
-        case 'Complete':
+case 'agent_complete':
 
-        // LangChain events
-        case 'agent_complete':
-          if (state.event === 'llamaindex-stop') {
-            // LlamaIndex llamaindex-stop event contains the final message content
-            delta = state.data?.message.content;
-          }
+  if (!delta && state.data?.messages?.length) {
 
-          this.updateAndNotifyAgentChatMessageState(delta, {
-            metadata: {
-              events: this.agentEventsBuffer,
-            },
-          });
+    const msg = state.data.messages[0];
 
-          this.assistantMessageInProgress.set(false);
-          break;
+    // NEW FORMAT
+    if (typeof msg?.content === 'string') {
+      delta = msg.content;
+    }
 
+    // LANGCHAIN FORMAT
+    else if (typeof msg?.kwargs?.content === 'string') {
+      delta = msg.kwargs.content;
+    }
+
+    // ARRAY FORMAT
+    else if (
+      msg?.kwargs?.content &&
+      Array.isArray(msg.kwargs.content)
+    ) {
+      delta = msg.kwargs.content
+        .map((c: any) => c.text || '')
+        .join('');
+    }
+  }
+
+  console.log("AGENT COMPLETE DELTA:", delta);
+
+  this.updateAndNotifyAgentChatMessageState(delta, {
+    metadata: {
+      events: this.agentEventsBuffer,
+    },
+  });
+
+  this.assistantMessageInProgress.set(false);
+  this.isLoading.set(false);
+
+  break;
         // LlamaIndex events
         case 'AgentToolCallResult':
           let messageState = {};
@@ -252,8 +293,10 @@ export class ChatService {
     delta: string,
     state?: Partial<ChatMessage>
   ) {
+    
     const lastMessage = this.messagesBuffer[this.messagesBuffer.length - 1];
     if (lastMessage?.role === 'assistant') {
+      console.log("Updating assistant message:", delta);
       lastMessage.content += delta;
       lastMessage.metadata = {
         ...lastMessage.metadata,
@@ -268,15 +311,13 @@ export class ChatService {
 
       this.messagesStream.next(this.messagesBuffer);
 
-      const md = marked.setOptions({});
-      const htmlContent = md.parse(lastMessage.content);
-      this._lastMessageContent$.next(await htmlContent);
+      
     }
   }
 
   resetChat() {
     this.userMessage.set('');
-    this._lastMessageContent$.next('');
+    
     this.messagesBuffer = [];
     this.messagesStream.next(this.messagesBuffer);
     this.agentEventsBuffer = [];

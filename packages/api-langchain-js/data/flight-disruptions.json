@@ -1,0 +1,140 @@
+[
+  {
+    "flightNumber": "GF101",
+    "origin": "BAH",
+    "destination": "DOH",
+    "status": "On Time"
+  },
+  {
+    "flightNumber": "GF102",
+    "origin": "BAH",
+    "destination": "CAI",
+    "status": "Boarding"
+  },
+  {
+    "flightNumber": "GF103",
+    "origin": "BAH",
+    "destination": "IST",
+    "status": "Delayed",
+    "delayMinutes": 45,
+    "reason": "Late arriving aircraft"
+  },
+  {
+    "flightNumber": "GF104",
+    "origin": "BAH",
+    "destination": "RUH",
+    "status": "On Time"
+  },
+  {
+    "flightNumber": "GF105",
+    "origin": "BAH",
+    "destination": "DEL",
+    "status": "Delayed",
+    "delayMinutes": 120,
+    "reason": "Operational disruption"
+  },
+  {
+    "flightNumber": "GF106",
+    "origin": "BAH",
+    "destination": "BOM",
+    "status": "Boarding"
+  },
+  {
+    "flightNumber": "GF107",
+    "origin": "BAH",
+    "destination": "LHR",
+    "status": "Cancelled",
+    "reason": "Airspace restrictions"
+  },
+  {
+    "flightNumber": "GF108",
+    "origin": "BAH",
+    "destination": "DXB",
+    "status": "On Time"
+  },
+  {
+    "flightNumber": "GF109",
+    "origin": "BAH",
+    "destination": "JED",
+    "status": "Delayed",
+    "delayMinutes": 90,
+    "reason": "Weather conditions"
+  },
+  {
+    "flightNumber": "GF110",
+    "origin": "BAH",
+    "destination": "MCT",
+    "status": "On Time"
+  },
+
+  {
+    "flightNumber": "GF123",
+    "origin": "BAH",
+    "destination": "LHR",
+    "status": "Delayed",
+    "delayMinutes": 180,
+    "reason": "Airspace congestion"
+  },
+  {
+    "flightNumber": "GF210",
+    "origin": "BAH",
+    "destination": "DXB",
+    "status": "Cancelled",
+    "reason": "Operational disruption"
+  },
+  {
+    "flightNumber": "GF450",
+    "origin": "BAH",
+    "destination": "JED",
+    "status": "Delayed",
+    "delayMinutes": 90,
+    "reason": "Weather conditions"
+  },
+
+  {
+    "flightNumber": "GF511",
+    "origin": "BAH",
+    "destination": "KWI",
+    "status": "On Time"
+  },
+  {
+    "flightNumber": "GF512",
+    "origin": "BAH",
+    "destination": "CMB",
+    "status": "Boarding"
+  },
+  {
+    "flightNumber": "GF513",
+    "origin": "BAH",
+    "destination": "DAC",
+    "status": "Delayed",
+    "delayMinutes": 60,
+    "reason": "Crew availability"
+  },
+  {
+    "flightNumber": "GF514",
+    "origin": "BAH",
+    "destination": "AMM",
+    "status": "On Time"
+  },
+  {
+    "flightNumber": "GF515",
+    "origin": "BAH",
+    "destination": "MED",
+    "status": "Diverted",
+    "reason": "Weather conditions"
+  },
+  {
+    "flightNumber": "GF516",
+    "origin": "BAH",
+    "destination": "SIN",
+    "status": "On Time"
+  },
+  {
+    "flightNumber": "GF517",
+    "origin": "BAH",
+    "destination": "FRA",
+    "status": "Cancelled",
+    "reason": "Technical issue"
+  }
+]

@@ -64,23 +64,46 @@ export const setupAgents = async (
     const customerTools = await createMcpTools(mcpServerConfig);
 
     const graph = createAgent({
-      model,
-      name: "CustomerQueryAgent",
-      tools: customerTools,
-      systemPrompt: "Assists employees in better understanding customer needs, facilitating more accurate and personalized service. This agent is particularly useful for handling nuanced queries, such as specific travel preferences or budget constraints, which are common in travel agency interactions.",
-    });
+  model,
+  name: "CustomerServiceAgent",
+  tools: customerTools,
+ systemPrompt: `
+You are Gulf Air's Customer Service Agent.
 
+Your responsibilities include:
+
+- Baggage allowance questions
+- Refund policies
+- Check-in policies
+- Special assistance requests
+- General customer service support
+
+Always provide responses using Gulf Air policies and procedures.
+`,
+});
     const agent = {
-      name: "CustomerQueryAgent",
-      description: "Assists employees in better understanding customer needs, facilitating more accurate and personalized service. This agent is particularly useful for handling nuanced queries, such as specific travel preferences or budget constraints, which are common in travel agency interactions.",
-      runnable: createAgent({
-        model,
-        name: "CustomerQueryAgent",
-        tools: customerTools,
-        systemPrompt: "You are a Customer Query Agent that assists employees in better understanding customer needs, facilitating more accurate and personalized service. This agent is particularly useful for handling nuanced queries, such as specific travel preferences or budget constraints, which are common in travel agency interactions.",
-      }),
-    };
+  name: "CustomerServiceAgent",
+  description:
+    "Provides Gulf Air customer service assistance including baggage, refunds, check-in policies, special assistance requests, and general passenger support.",
+  runnable: createAgent({
+    model,
+    name: "CustomerServiceAgent",
+    tools: customerTools,
+    systemPrompt: `
+You are Gulf Air's Customer Service Agent.
 
+Your responsibilities include:
+
+- Baggage allowance questions
+- Refund policies
+- Check-in policies
+- Special assistance requests
+- General customer service support
+
+Always provide responses using Gulf Air policies and procedures.
+`,
+  }),
+};
     agents.push(agent);
     mcpTools.push(...customerTools);
   }
@@ -90,14 +113,29 @@ export const setupAgents = async (
     const itineraryTools = await createMcpTools(mcpServerConfig);
 
     const agent = {
-      name: "ItineraryPlanningAgent",
-      description: "Creates a travel itinerary based on user preferences and requirements.",
-      runnable: createAgent({
-        model,
-        tools: itineraryTools,
-        systemPrompt: "You are an Itinerary Planning Agent that creates travel itineraries based on user preferences and requirements.",
-      }),
-    };
+  name: "PassengerLookupAgent",
+  description:
+    "Provides passenger lookup services using booking references, passenger records, flight status information, and personalized assistance.",
+  runnable: createAgent({
+    model,
+    name: "PassengerLookupAgent",
+    tools: itineraryTools,
+    systemPrompt: `
+You are Gulf Air's Passenger Lookup Agent.
+
+Your responsibilities include:
+
+- Booking reference lookup
+- Passenger profile lookup
+- Flight assignment lookup
+- Passenger status lookup
+- Personalized travel assistance
+
+Provide responses using passenger records and operational flight information.
+`,
+  }),
+};
+
 
     agents.push(agent);
     mcpTools.push(...itineraryTools);
@@ -108,14 +146,29 @@ export const setupAgents = async (
     const destinationTools = await createMcpTools(mcpServerConfig);
 
     const agent = {
-      name: "DestinationRecommendationAgent",
-      description: "Suggests destinations based on customer preferences and requirements.",
-      runnable: createAgent({
-        model,
-        tools: destinationTools,
-        systemPrompt: "You are a Destination Recommendation Agent that suggests destinations based on customer preferences and requirements.",
-      })
-    };
+  name: "OperationsAgent",
+  description:
+    "Provides Gulf Air operational information including delays, cancellations, diversions, flight status, and disruption summaries.",
+  runnable: createAgent({
+    model,
+    name: "OperationsAgent",
+    tools: destinationTools,
+    systemPrompt: `
+You are Gulf Air's Operations Agent.
+
+Your responsibilities include:
+
+- Flight delays
+- Flight cancellations
+- Flight diversions
+- Flight status enquiries
+- Operational disruptions
+- Operational summaries
+
+Provide clear operational guidance and passenger assistance recommendations.
+`,
+  }),
+};
 
     agents.push(agent);
     mcpTools.push(...destinationTools);
@@ -127,8 +180,19 @@ export const setupAgents = async (
   const deepAgent = createDeepAgent({
     model,
     subagents: agents,
-    systemPrompt: "Acts as a triage agent to determine the best course of action for the user's query. If you cannot handle the query, please delegate to your subagents using the task() tool. If you can handle the query, please do so.",
-    tools: mcpTools,
+systemPrompt: `
+You are Gulf Air's Supervisor Agent.
+
+Route requests to the most appropriate specialist agent.
+
+Use:
+
+- OperationsAgent for flight status, delays, cancellations, diversions, and disruption summaries.
+- CustomerServiceAgent for baggage, refunds, check-in policies, and special assistance.
+- PassengerLookupAgent for booking references, passenger records, and personalized assistance.
+
+If multiple agents are relevant, combine their information into a single response.
+`,    tools: mcpTools,
   });
 
   return { agents, mcpTools, deepAgent };

@@ -12,6 +12,15 @@ npm start
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
+## Gulf Air support workspace
+
+The UI opens with a local demo sign-in. Choose one of the sample passenger profiles, sign in with a sample email, or create a browser-local demo profile. The workspace keeps passenger context separate when switching profiles and offers English/Arabic UI and response-language selection.
+
+The desktop workspace is arranged as passenger context, conversation, and copilot suggestions. Conversation history scrolls within its panel so the support context stays visible at 100% zoom. “Book flight” searches sample schedules and creates a local demo booking reference only.
+
+> [!IMPORTANT]
+> Demo sign-in is not authentication. Sample fares and bookings are not live Gulf Air inventory; no ticket, payment, CRM update, or human-agent transfer is performed. Do not enter payment or passport details.
+
 ## Building
 
 ### Development Build

@@ -1,0 +1,11 @@
+Gulf Air Operations Manual
+
+Delayed Flights
+- Delays under 60 minutes require status updates.
+- Delays over 120 minutes trigger passenger care procedures.
+
+Cancelled Flights
+- Customers may rebook, refund, or receive vouchers.
+
+Diverted Flights
+- Operations center coordinates onward travel.

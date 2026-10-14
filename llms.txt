@@ -1,4 +1,4 @@
-This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
+tThis file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
 
 # File Summary
 
@@ -10430,30 +10430,11 @@ import { SkeletonPreviewComponent } from '../components/skeleton-preview/skeleto
 import { ApiService, ChatEvent, ChatMessage } from '../services/api.service';
 import { ChatService } from './chat-conversation.service';
 
-const SAMPLE_PROMPT_1 = `Hello! I'm planning a trip to Iceland and would like your expertise to create a custom itinerary. Please use your destination planning tools and internal resources to suggest a day-by-day plan based on:
-	•	Top must-see natural sites (glaciers, waterfalls, geothermal spots, etc.)
-	•	Unique local experiences (culture, food, hidden gems)
-	•	Efficient travel routes and realistic timing
-	•	A mix of adventure and relaxation
+const SAMPLE_PROMPT_1 = `Summarize all current disruptions affecting Gulf Air passengers.`;
 
-I'm aiming for an itinerary that balances scenic exploration with comfort. Feel free to tailor recommendations based on the best time to visit and local logistics. Thank you!`;
+const SAMPLE_PROMPT_2 = `My flight GF210 was cancelled. What are my options for refund or rebooking?`;
 
-const SAMPLE_PROMPT_2 = `Hi there! I'd love help planning a trip to Iceland. I'm looking for destination suggestions and a full itinerary tailored to an unforgettable experience. Please use your planning tools and destination insights to recommend:
-	•	Where to go and why
-	•	What to do each day (including any unique or off-the-beaten-path experiences)
-	•	Best ways to get around and where to stay
-
-I'm open to all kinds of adventures—whether it's chasing waterfalls, soaking in hot springs, or discovering small Icelandic towns. A mcp-informed, creative itinerary would be amazing!`;
-
-const SAMPLE_PROMPT_3 = `I'm planning a trip to Morocco and would appreciate a complete, mcp-assisted itinerary.
-Please use your travel planning systems to recommend key destinations, daily activities, and a logical route.
-I'm looking for a balanced experience that includes cultural landmarks, natural scenery, and time to relax.
-Efficient travel logistics and seasonal considerations would be great to include.
-
-Travel Dates: as soon as possible.
-Starting Point: from Paris, France.
-Duration: 10 days.
-Budget: 5000 euros.`;
+const SAMPLE_PROMPT_3 = `I need wheelchair assistance and want to know my baggage allowance.`;
 
 @Component({
   selector: 'app-chat-conversation',
@@ -11305,7 +11286,7 @@ export default bootstrap;
   <ng-scrollbar
     hlmCardContent
     hlm
-    class="flex-1 h-[800px] p-10 overflow-y-auto mb-10"
+    class="flex-1 px-12 py-10 overflow-y-auto"
   >
     <div class="flex flex-col gap-4">
       @if (messages.length === 0) {

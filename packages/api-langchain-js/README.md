@@ -44,8 +44,12 @@ List available MCP tools
 
 ### POST /api/chat
 Chat endpoint with streaming support
-- Request body: `{ message: string, tools: Array }`
+- Request body: `{ message: string, tools: Array, customerContext?: SupportPassengerContext, conversationHistory?: ConversationTurn[] }`
 - Response: Server-Sent Events stream
+
+`customerContext` contains only the active passenger's booking, route, tier, and preferred language. `conversationHistory` contains up to the recent conversation turns needed to handle follow-up answers. The API does not retain a shared passenger context between requests.
+
+The passenger and flight data in this repository is for local demonstration only. It is not a live reservations, ticketing, check-in, baggage, payment, or CRM integration. Do not pass passport or payment details.
 
 ## Usage
 

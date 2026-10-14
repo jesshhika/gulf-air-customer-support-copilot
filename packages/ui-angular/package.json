@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "NG_APP_ENV=development ng serve",
-    "build": "NG_APP_ENV=development ng build --configuration development",
-    "build:docker": "NG_APP_ENV=docker ng build --configuration development",
-    "build:production": "NG_APP_ENV=production ng build --configuration production",
-    "watch": "NG_APP_ENV=development ng build --watch --configuration development",
-    "test": "NG_APP_ENV=development ng test",
+   "start": "set NG_APP_ENV=development&& ng serve",
+"build": "set NG_APP_ENV=development&& ng build --configuration development",
+"build:docker": "set NG_APP_ENV=docker&& ng build --configuration development",
+"build:production": "set NG_APP_ENV=production&& ng build --configuration production",
+"watch": "set NG_APP_ENV=development&& ng build --watch --configuration development",
+"test": "set NG_APP_ENV=development&& ng test",
     "serve:ssr": "node dist/app/server/server.mjs"
   },
   "private": true,

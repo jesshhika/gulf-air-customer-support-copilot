@@ -1,0 +1,86 @@
+[
+  {
+    "bookingReference": "GA12345",
+    "name": "Ahmed Ali",
+    "flightNumber": "GF123",
+    "origin": "BAH",
+    "destination": "LHR",
+    "email": "ahmed@gulfairdemo.com",
+    "phone": "+97312345001",
+    "seat": "12C",
+    "falconFlyerTier": "Gold",
+    "status": "Checked In"
+  },
+  {
+    "bookingReference": "GA67890",
+    "name": "Fatima Hassan",
+    "flightNumber": "GF210",
+    "origin": "BAH",
+    "destination": "DXB",
+    "email": "fatima@gulfairdemo.com",
+    "phone": "+97312345678",
+    "seat": "18A",
+    "falconFlyerTier": "Silver",
+    "status": "Not Checked In"
+  },
+  {
+    "bookingReference": "GA11223",
+    "name": "Omar Saleh",
+    "flightNumber": "GF450",
+    "origin": "BAH",
+    "destination": "JED",
+    "email": "omar@gulfairdemo.com",
+    "phone": "+97312345002",
+    "seat": "22D",
+    "falconFlyerTier": "Blue",
+    "status": "Checked In"
+  },
+  {
+    "bookingReference": "GA77881",
+    "name": "Noor Ahmed",
+    "flightNumber": "GF107",
+    "origin": "BAH",
+    "destination": "LHR",
+    "email": "noor@gulfairdemo.com",
+    "phone": "+97312345003",
+    "seat": "10A",
+    "falconFlyerTier": "Gold",
+    "status": "Checked In"
+  },
+  {
+    "bookingReference": "GA99112",
+    "name": "Khalid Yusuf",
+    "flightNumber": "GF515",
+    "origin": "BAH",
+    "destination": "MED",
+    "email": "khalid@gulfairdemo.com",
+    "phone": "+97312345004",
+    "seat": "14F",
+    "falconFlyerTier": "Black",
+    "status": "Checked In"
+  },
+  {
+    "bookingReference": "GA88117",
+    "name": "Mariam Hassan",
+    "flightNumber": "GF513",
+    "origin": "BAH",
+    "destination": "DAC",
+    "email": "mariam@gulfairdemo.com",
+    "phone": "+97312345005",
+    "seat": "19B",
+    "falconFlyerTier": "Silver",
+    "status": "Checked In"
+  },
+  {
+    "bookingReference": "GA66778",
+    "name": "Sara Ali",
+    "flightNumber": "GF102",
+    "origin": "BAH",
+    "destination": "DEL",
+    "email": "sara@gulfairdemo.com",
+    "phone": "+97312345006",
+    "seat": "25C",
+    "falconFlyerTier": "Blue",
+    "status": "Checked In"
+  }
+]

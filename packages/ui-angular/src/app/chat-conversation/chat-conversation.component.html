@@ -1,270 +1,248 @@
-<hlm-toaster />
-<div hlmCard class="w-[1200px] h-full max-h-[1000px] flex flex-col">
-  <div hlmCardHeader class="sticky top-0 z-10 bg-background">
-    <h3
-      hlmCardTitle
-      class="text-center flex justify-between items-center mb-10"
-    >
-      <span>AI Travel Agent Chat</span>
-      <hlm-alert-dialog>
-        <button
-          hlmBtn
-          variant="ghost"
-          size="icon"
-          class="ml-2"
-          title="New Chat"
-          brnAlertDialogTrigger
-        >
-          <ng-icon hlm name="lucideRefreshCw" class="h-4 w-4" />
-        </button>
-        <hlm-alert-dialog-content
-          *brnAlertDialogContent="let ctx"
-          class="w-[400px]"
-        >
-          <hlm-alert-dialog-header>
-            <h3 hlmAlertDialogTitle>Clear chat session?</h3>
-            <p hlmAlertDialogDescription>
-              This will clear all messages from the current chat session and
-              start a new one. This action cannot be undone.
-            </p>
-          </hlm-alert-dialog-header>
+<main class="copilot-shell" [class.dark-mode]="darkMode()" [dir]="selectedLanguage() === 'ar' ? 'rtl' : 'ltr'">
+  @if (!isSignedIn()) {
+    <section class="sign-in-page">
+      <div class="sign-in-card">
+        <div class="brand-lockup">
+          <img class="brand-mark brand-logo" src="/images/codesizzler-logo.png" alt="CodeSizzler">
+          <div><span class="eyebrow">{{ tr('Gulf Air', 'طيران الخليج') }}</span><h1>{{ tr('Customer Support', 'خدمة العملاء') }}</h1></div>
+        </div>
+        <div class="sign-in-language"><button type="button" [class.active]="selectedLanguage() === 'en'" (click)="chooseLanguage('en')">EN</button><button type="button" [class.active]="selectedLanguage() === 'ar'" (click)="chooseLanguage('ar')">عربي</button></div>
+        <p class="sign-in-intro">{{ tr('Sign in to your passenger workspace or choose a sample profile to explore the support experience.', 'سجّل الدخول إلى مساحة المسافر أو اختر ملفاً تجريبياً لاستكشاف تجربة الدعم.') }}</p>
+        <div class="demo-note">{{ tr('Local demo access only · No real Gulf Air account or reservation is connected', 'دخول تجريبي محلي فقط · لا يرتبط بحساب أو حجز حقيقي لدى طيران الخليج') }}</div>
 
-          <hlm-alert-dialog-footer>
-            <button hlmAlertDialogCancel (click)="cancelReset(ctx)">
-              Cancel
+        <h2>{{ tr('Continue with a passenger profile', 'المتابعة باستخدام ملف مسافر') }}</h2>
+        <div class="sign-in-profiles">
+          @for (passenger of passengers(); track passenger.id) {
+            <button class="profile-choice" type="button" (click)="switchPassenger(passenger)">
+              <span class="avatar">{{ passenger.name.charAt(0) }}</span>
+              <span class="profile-choice-copy"><strong>{{ passenger.name }}</strong><small>{{ passenger.falconFlyerTier }} · {{ passenger.bookingReference || 'No booking' }}</small></span>
+              <span class="choice-arrow">›</span>
             </button>
-            <button hlmAlertDialogAction (click)="confirmReset(ctx)">
-              Continue
-            </button>
-          </hlm-alert-dialog-footer>
-        </hlm-alert-dialog-content>
-      </hlm-alert-dialog>
-    </h3>
-  </div>
-
-  <ng-scrollbar
-    hlmCardContent
-    hlm
-    class="flex-1 h-[800px] p-10 overflow-y-auto mb-10"
-  >
-    <div class="flex flex-col gap-4">
-      @if (messages.length === 0) {
-      <div class="flex flex-row gap-4">
-        @for(prompt of samplePrompts; track prompt) {
-        <div
-          class="p-10 bg-muted rounded-md flex items-center justify-center cursor-pointer border hover:border-red"
-          (click)="chatService.userMessage.set(prompt)"
-        >
-          <p
-            class="display-box max-w-200 line-clamp-4 box-orient-vertical overflow-hidden text-ellipsis"
-          >
-            {{ prompt }}
-          </p>
+          }
         </div>
 
+        <div class="divider-label"><span>{{ tr('or use your demo profile email', 'أو استخدم البريد الإلكتروني للملف التجريبي') }}</span></div>
+        <form class="sign-in-form" (ngSubmit)="signInWithEmail()">
+          <label for="login-email">{{ tr('Email address', 'البريد الإلكتروني') }}</label>
+          <input id="login-email" name="loginEmail" type="email" autocomplete="email" [(ngModel)]="loginEmail" placeholder="name@example.com">
+          <button class="primary-button full-width" type="submit">{{ tr('Continue', 'متابعة') }}</button>
+        </form>
+        <button class="text-button" type="button" (click)="accountFormOpen = !accountFormOpen">
+          {{ accountFormOpen ? tr('Back to sign in', 'العودة لتسجيل الدخول') : tr('New passenger? Create a demo profile', 'مسافر جديد؟ أنشئ ملفاً تجريبياً') }}
+        </button>
+
+        @if (accountFormOpen) {
+          <form class="create-profile-form" (ngSubmit)="createPassengerProfile()">
+            <label for="new-name">{{ tr('Full name', 'الاسم الكامل') }}</label>
+            <input id="new-name" name="newPassengerName" [(ngModel)]="newPassengerName" autocomplete="name" placeholder="Your name">
+            <label for="new-email">{{ tr('Email address', 'البريد الإلكتروني') }}</label>
+            <input id="new-email" name="newPassengerEmail" type="email" [(ngModel)]="newPassengerEmail" autocomplete="email" placeholder="name@example.com">
+            <p class="form-help">{{ tr('This creates a local sample profile in this browser. It does not create a Gulf Air account.', 'ينشئ هذا ملفاً تجريبياً محلياً في هذا المتصفح ولا ينشئ حساباً لدى طيران الخليج.') }}</p>
+            <button class="primary-button full-width" type="submit">{{ tr('Create profile and continue', 'إنشاء الملف والمتابعة') }}</button>
+          </form>
         }
+        @if (loginError) { <p class="form-error" role="alert">{{ loginError }}</p> }
+        <div class="powered-by sign-in-powered" aria-label="Powered by CodeSizzler">
+          <span>Powered By</span><strong>CodeSizzler</strong>
+        </div>
       </div>
-      }
-      <!-- loop over all messages -->
-      @for (message of messages; track message) {
-      <ng-container>
-        <div
-          class="flex gap-3"
-          [ngClass]="message.role === 'user' ? 'flex-row-reverse' : 'flex-col'"
-        >
-          @if (message.role === 'user') {
-          <div
-            class="items-end rounded-md px-4 py-2 bg-primary text-primary-foreground"
-          >
-            <p style="white-space: pre-wrap">{{ message.content }}</p>
+    </section>
+  } @else {
+    <header class="topbar">
+      <div class="brand-lockup compact">
+        <img class="brand-mark brand-logo" src="/images/codesizzler-logo.png" alt="CodeSizzler">
+        <div><span class="eyebrow">{{ tr('Gulf Air · Agent workspace', 'طيران الخليج · مساحة الموظف') }}</span><strong>{{ tr('Customer Support Copilot', 'مساعد خدمة العملاء') }}</strong></div>
+      </div>
+      <div class="case-meta">
+        <span class="live-indicator"></span>
+        <span>{{ messages.length ? tr('Case in progress', 'الحالة قيد المعالجة') : tr('Ready to assist', 'جاهز للمساعدة') }}</span>
+        @if (selectedPassenger()?.bookingReference) { <span class="case-number">{{ tr('Booking', 'الحجز') }} {{ selectedPassenger()?.bookingReference }}</span> }
+      </div>
+      <div class="powered-by topbar-powered" aria-label="Powered by CodeSizzler">
+        <span>Powered By</span><strong>CodeSizzler</strong>
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-button language-button" [class.active]="selectedLanguage() === 'en'" type="button" (click)="chooseLanguage('en')">EN</button>
+        <button class="topbar-button language-button" [class.active]="selectedLanguage() === 'ar'" type="button" (click)="chooseLanguage('ar')">عربي</button>
+        <button class="topbar-button" type="button" (click)="toggleDarkMode()" [attr.aria-label]="darkMode() ? 'Switch to light mode' : 'Switch to dark mode'">{{ darkMode() ? 'Light' : 'Dark mode' }}</button>
+        <button class="topbar-button" type="button" (click)="showBooking()">＋ {{ tr('Book flight', 'حجز رحلة') }}</button>
+        <button class="topbar-button" type="button" (click)="startNewCase()">＋ {{ tr('New case', 'حالة جديدة') }}</button>
+        <button class="topbar-button sign-out-button" type="button" (click)="signOut()">{{ tr('Sign out', 'تسجيل الخروج') }}</button>
+      </div>
+    </header>
+
+    @if (activePanel() === 'booking') {
+      <section class="booking-page">
+        <div class="booking-heading">
+          <div><span class="eyebrow">{{ tr('Passenger self-service · Demo', 'الخدمة الذاتية للمسافر · تجريبي') }}</span><h1>{{ tr('Find a Gulf Air flight', 'ابحث عن رحلة لطيران الخليج') }}</h1><p>{{ tr('Search sample schedules and save a simulated booking to the selected passenger profile.', 'ابحث في جداول تجريبية واحفظ حجزاً محاكياً في ملف المسافر المحدد.') }}</p></div>
+          <button class="secondary-button" type="button" (click)="activePanel.set('workspace')">← {{ tr('Back to support', 'العودة إلى الدعم') }}</button>
+        </div>
+        <form class="flight-search-card" (ngSubmit)="searchFlights()">
+          <label>{{ tr('From', 'من') }}
+            <select name="bookingOrigin" [(ngModel)]="bookingOrigin">
+              @for (airport of airportOptions; track airport.code) { <option [value]="airport.code">{{ airport.city }} ({{ airport.code }})</option> }
+            </select>
+          </label>
+          <label>{{ tr('To', 'إلى') }}
+            <select name="bookingDestination" [(ngModel)]="bookingDestination">
+              @for (airport of airportOptions; track airport.code) { <option [value]="airport.code">{{ airport.city }} ({{ airport.code }})</option> }
+            </select>
+          </label>
+          <label>{{ tr('Departure', 'المغادرة') }}
+            <input name="bookingDate" type="date" [(ngModel)]="bookingDate">
+          </label>
+          <label>{{ tr('Passengers', 'المسافرون') }}
+            <select name="bookingTravelers" [(ngModel)]="bookingTravelers"><option [ngValue]="1">1 passenger</option><option [ngValue]="2">2 passengers</option><option [ngValue]="3">3 passengers</option><option [ngValue]="4">4 passengers</option></select>
+          </label>
+          <label>{{ tr('Cabin', 'الدرجة') }}
+            <select name="bookingCabin" [(ngModel)]="bookingCabin"><option>Economy</option><option>Falcon Gold</option></select>
+          </label>
+          <button class="primary-button search-button" type="submit">{{ tr('Search flights', 'البحث عن رحلات') }}</button>
+        </form>
+        <p class="demo-note booking-demo-note">{{ tr('Schedules and prices below are sample data, not live inventory. Confirming creates a local demo reference only; no payment or ticket is issued.', 'الجداول والأسعار بيانات تجريبية وليست مقاعد متاحة مباشرة. التأكيد ينشئ مرجعاً تجريبياً محلياً فقط ولا يصدر تذكرة أو يجري دفعاً.') }}</p>
+        @if (bookingConfirmation()) { <div class="booking-confirmation" role="status">{{ bookingConfirmation() }}</div> }
+        @if (flightOptions().length) {
+          <div class="flight-results">
+            <div class="results-heading"><h2>{{ flightOptions().length }} {{ tr('sample departures', 'رحلات تجريبية') }}</h2><span>{{ bookingOrigin }} → {{ bookingDestination }} · {{ bookingTravelers }} {{ tr('passenger(s)', 'مسافر/مسافرين') }} · {{ bookingCabin }}</span></div>
+            @for (flight of flightOptions(); track flight.flightNumber) {
+              <article class="flight-card">
+                <div class="flight-number"><strong>{{ flight.flightNumber }}</strong><small>{{ tr('Gulf Air · ', 'طيران الخليج · ') }}{{ flight.fare }} {{ tr('fare', 'الدرجة') }}</small></div>
+                <div class="flight-time"><strong>{{ flight.departure }}</strong><span>{{ flight.duration }}</span><strong>{{ flight.arrival }}</strong></div>
+                <div class="flight-price"><strong>{{ flight.price * bookingTravelers }} BHD</strong><small>{{ tr('sample total', 'الإجمالي التجريبي') }}</small></div>
+                <button class="primary-button" type="button" (click)="confirmDemoBooking(flight)">{{ tr('Select flight', 'اختيار الرحلة') }}</button>
+              </article>
+            }
           </div>
-          } @else if (message.role === 'assistant') {
+        }
+      </section>
+    } @else {
+      <section class="workspace-grid">
+        <aside class="left-rail" aria-label="Passenger context">
+          <section class="panel passenger-panel">
+            <div class="panel-heading"><div><span class="eyebrow">{{ tr('Customer context', 'بيانات العميل') }}</span><h2>{{ tr('Passenger', 'المسافر') }}</h2></div><span class="avatar large">{{ selectedPassenger()?.name?.charAt(0) }}</span></div>
+            <h3 class="passenger-name">{{ selectedPassenger()?.name }}</h3>
+            <p class="muted-text">{{ selectedPassenger()?.email }}</p>
+            <div class="identity-tags"><span class="tier-tag">{{ selectedPassenger()?.falconFlyerTier }} · FalconFlyer</span><span class="sentiment-tag">{{ selectedPassenger()?.sentiment }}</span></div>
+          </section>
 
-          <section class="flex flex-col gap-2 w-full">
-            @if(message.metadata?.events?.at(0)?.kind !== 'llamaindex-ts') {
-            <accordion-preview
-              title="Agents Reasoning..."
-              icon="lucideBrain"
-              [isOpened]="false"
-              class="flex flex-row rounded-3xl px-4 py-2 w-full"
-            >
-              @for (evt of message.metadata?.events; track $index) {
-              @if((evt.event !== 'AgentStream' && evt.event !== 'AgentDelta' &&
-              evt.event !== 'llm_token')) {
-              <accordion-preview
-                [isOpened]="false"
-                icon="lucideCheck"
-                [title]="'Processing ' + evt.kind + ' event: ' + evt.event"
-                class="flex flex-row rounded-3xl px-4 w-full"
-              >
-                <div class="text-muted-foreground">
-                  @if(evt.agent) {
-                  <span hlmBadge brnHoverCardTrigger variant="outline"
-                    >Agent</span
-                  >
-                  {{ evt.agent }}
-                  <br />
-                  <span hlmBadge brnHoverCardTrigger variant="outline"
-                    >Event</span
-                  >
-                  {{ evt.event }}
-                  <br />
-                  } @if(evt.data?.tool) {
-                  <span hlmBadge brnHoverCardTrigger variant="outline"
-                    >Tools</span
-                  >
-                  {{ evt.data.tool }}
-                  <br />
-                  <span hlmBadge brnHoverCardTrigger variant="outline"
-                    >Args</span
-                  >
-                  {{ evt.data?.input || "{}" | json }}
-                  }
-                  <br />
-                  @if(evt.data?.output && printAgentsGraph(evt)) {
-                  <span hlmBadge brnHoverCardTrigger variant="outline"
-                    >Agents</span
-                  >
-                  <span>{{
-                    (evt.data?.output?.goto || "") + printAgentsGraph(evt) ||
-                      "-"
-                  }}</span>
-                  }
-                  <br />
-
-                  <span>{{
-                    evt.data?.input?.messages?.at(-1)?.kwargs?.content || ""
-                  }}</span>
-                  <span>{{
-                    evt.data?.output?.update?.messages?.at(-1)?.kwargs
-                      ?.content || ""
-                  }}</span>
-                </div>
-                <brn-separator hlmSeparator />
-              </accordion-preview>
-              } }
-            </accordion-preview>
+          <section class="panel booking-context">
+            <div class="panel-title-row"><span class="eyebrow">{{ tr('Current booking', 'الحجز الحالي') }}</span><button class="inline-link" type="button" (click)="showBooking()">{{ tr('Book flight', 'حجز رحلة') }}</button></div>
+            @if (selectedPassenger()?.bookingReference) {
+              <div class="route-line"><strong>{{ selectedPassenger()?.flightNumber }}</strong><span>{{ selectedPassenger()?.origin }} → {{ selectedPassenger()?.destination }}</span></div>
+              <p class="booking-date">{{ selectedPassenger()?.departure }}</p>
+              <div class="booking-tags"><span>{{ selectedPassenger()?.bookingStatus }}</span><span>Seat {{ selectedPassenger()?.seat }}</span></div>
+              <small class="reference-label">Reference {{ selectedPassenger()?.bookingReference }}</small>
+            } @else {
+              <p class="muted-text">No active booking is linked to this profile.</p>
+              <button class="secondary-button full-width" type="button" (click)="showBooking()">{{ tr('Search Gulf Air flights', 'البحث عن رحلات طيران الخليج') }}</button>
             }
           </section>
 
-          @if ($last && chatService.isLoading()) {
-          <skeleton-preview></skeleton-preview>
-          } @else { @for(reason of message.reasoning; track reason) {
-          <div hlmAlert class="gap-10">
-            <p hlmAlertDesc>
-              <span class="italic">{{ reason.content }}</span>
-            </p>
-          </div>
-          }
-          <div hlmAlert class="bg-muted gap-10">
-            <p
-              hlmAlertDesc
-              [innerHTML]="chatService.lastMessageContent$ | async"
-            ></p>
-          </div>
-          } }
-        </div>
-        <div
-          class="text-[10px] opacity-60"
-          [ngClass]="message.role === 'user' ? 'text-right' : 'text-left'"
-        >
-          {{ message.timestamp | date : "short" }}
-        </div>
-      </ng-container>
-      }
-    </div>
+          <section class="panel">
+            <span class="eyebrow">{{ tr('Open & past cases', 'الحالات السابقة والحالية') }}</span>
+            @if (selectedPassenger()?.cases?.length) {
+              <ul class="compact-list">@for (item of selectedPassenger()?.cases; track item) { <li>{{ item }}</li> }</ul>
+            } @else { <p class="muted-text small">No previous cases in this demo profile.</p> }
+          </section>
 
-    <span #eot class="font-mono text-xs"></span>
-  </ng-scrollbar>
+          <section class="panel">
+            <span class="eyebrow">{{ tr('Flags & preferences', 'التنبيهات والتفضيلات') }}</span>
+            @if (selectedPassenger()?.flags?.length) {
+              <div class="flag-list">@for (flag of selectedPassenger()?.flags; track flag) { <span class="flag">{{ flag }}</span> }</div>
+            } @else { <p class="muted-text small">No special flags recorded.</p> }
+            <p class="privacy-note">Demo data only · Avoid entering payment or passport details</p>
+          </section>
 
-  <div hlmCardFooter class="flex-col items-start gap-2">
-    <div class="flex gap-2"></div>
-    <div class="flex gap-2 w-full mt-10">
-      <section class="relative flex-1 max-h-[200px]">
-        <hlm-form-field
-          class="flex-col flex w-full h-[200px] border rounded-2xl p-4"
-        >
-          <textarea
-            hlmInput
-            type="text"
-            class="flex-1 border-0 pt-2 mb-2 w-[95%] overflow-y-auto rounded-xl resize-none"
-            placeholder="Type your message here (Shift + Enter for new line)..."
-            [(ngModel)]="chatService.userMessage"
-            (keyup.enter)="chatService.sendMessage($event)"
-          ></textarea>
-          <hlm-hint class="mr-1 mt-10"
-            >AI-generated content may be incorrect</hlm-hint
-          >
-        </hlm-form-field>
-        <button
-          hlmBtn
-          variant="ghost"
-          class="rounded-full absolute right-2 top-20"
-          [disabled]="
-            chatService.isLoading() || !chatService.userMessage().trim()
-          "
-          (click)="chatService.sendMessage($event)"
-        >
-          <ng-icon hlm size="lg" name="lucideSendHorizontal" />
-        </button>
-        <brn-popover sideOffset="5" class="right-2 top-[-50px] absolute">
-          <button id="edit-profile" variant="ghost" brnPopoverTrigger hlmBtn>
-            <ng-icon hlm size="lg" name="lucideBot" />
-          </button>
-          <div
-            hlmPopoverContent
-            class="w-100 grid gap-4"
-            *brnPopoverContent="let ctx"
-          >
-            <div class="space-y-2">
-              <h4 class="font-medium leading-none">
-                Available Agents and MCP tools
-              </h4>
-              <p class="text-sm text-muted-foreground">
-                Choose which agents to use
-              </p>
-            </div>
-            <div class="grid gap-2">
-              @for(tool of chatService.tools(); track tool) {
-              <div class="items-center">
-                <label class="flex items-center" hlmLabel for="agent-event-{{ tool.id }}">
-                  <hlm-switch
-                    id="agent-event-{{ tool.id }}"
-                    class="mr-2"
-                    [disabled]="!tool.reachable"
-                    [(ngModel)]="tool.selected"
-                  />
-                  {{ tool.name }}
-                  @if(!tool.reachable) { (Offline)  }
-                </label>
+          <section class="panel profile-switcher">
+            <div class="panel-title-row"><span class="eyebrow">{{ tr('Switch passenger', 'تبديل المسافر') }}</span><span class="small muted-text">{{ tr('one click', 'بنقرة واحدة') }}</span></div>
+            @for (passenger of passengers(); track passenger.id) {
+              <button class="switch-profile" [class.selected]="passenger.id === selectedPassengerId()" type="button" (click)="switchPassenger(passenger)">
+                <span class="mini-avatar">{{ passenger.name.charAt(0) }}</span><span>{{ passenger.name }}</span><span class="switch-tier">{{ passenger.falconFlyerTier }}</span>
+              </button>
+            }
+          </section>
+        </aside>
+
+        <section class="conversation-panel" aria-label="Support conversation">
+          <div class="conversation-header">
+            <div><span class="eyebrow">{{ tr('Conversation', 'المحادثة') }}</span><h2>{{ selectedPassenger()?.name ? tr('Supporting ', 'دعم ') + selectedPassenger()?.name : tr('Customer support', 'خدمة العملاء') }}</h2></div>
+            <div class="conversation-controls"><span class="grounding-state"><span class="grounding-dot"></span>{{ tr('Policy-grounded', 'مستند إلى السياسات') }}</span><button class="icon-button" type="button" [attr.aria-label]="tr('Start new case', 'بدء حالة جديدة')" (click)="startNewCase()">＋</button></div>
+          </div>
+          <div class="conversation-log" #conversationLog>
+            @if (messages.length === 0) {
+              <div class="welcome-card">
+                <span class="welcome-mark">GF</span>
+                <div><h3>{{ selectedLanguage() === 'ar' ? 'مرحباً' + (getPassengerFirstName() ? '، ' + getPassengerFirstName() : '') + '، كيف يمكنني مساعدتك؟' : 'Hello' + (getPassengerFirstName() ? ', ' + getPassengerFirstName() : '') + '. How can I help?' }}</h3><p>{{ tr('I can help with your booking, flight updates, baggage, refunds, FalconFlyer, or finding a flight. Ask naturally; I’ll only request details needed for your specific request.', 'يمكنني مساعدتك في الحجز وتحديثات الرحلات والأمتعة والاسترداد وفلاي فلاير أو البحث عن رحلة. اكتب سؤالك بطريقتك وسأطلب فقط التفاصيل اللازمة.') }}</p></div>
               </div>
-              }
-            </div>
-            <div class="space-y-2">
-              <h4 class="font-medium leading-none">Orchestration API</h4>
-            </div>
-            <div class="grid gap-2">
-              <brn-select
-                class="inline-block"
-                placeholder="Select an option"
-                [(ngModel)]="selectedApiUrl"
-              >
-                <hlm-select-trigger class="w-56">
-                  <hlm-select-value />
-                </hlm-select-trigger>
-                <hlm-select-content>
-                  @for( api of availableApiUrls(); track api) {
-                  <hlm-option [value]="api.url" [disabled]="!api.isOnline">
-                    {{ api.label }}
-                    @if(!api.isOnline) { (Offline) }
-                  </hlm-option>
-                  }
-                </hlm-select-content>
-              </brn-select>
-            </div>
+              <div class="quick-actions" aria-label="Common support requests">
+                @for (action of quickActions; track action.label) {
+                  <button class="quick-action" type="button" (click)="sendQuickAction(action.prompt)"><span class="quick-icon">{{ action.icon }}</span><span>{{ selectedLanguage() === 'ar' ? action.labelAr : action.label }}</span><span class="action-chevron">›</span></button>
+                }
+              </div>
+              <button class="booking-prompt" type="button" (click)="showBooking()"><span class="booking-prompt-icon">＋</span><span><strong>{{ tr('Planning a trip?', 'هل تخطط لرحلة؟') }}</strong><small>{{ tr('Search sample Gulf Air flights from this workspace', 'ابحث عن رحلات تجريبية لطيران الخليج من هذه المساحة') }}</small></span><span class="action-chevron">›</span></button>
+            }
+            @for (message of messages; track $index) {
+              <article class="message-row" [class.from-customer]="message.role === 'user'">
+                @if (message.role === 'assistant') { <span class="message-avatar">GF</span> }
+                <div class="message-content">
+                  <div class="message-label">{{ message.role === 'user' ? tr('You', 'أنت') : tr('Gulf Air support copilot', 'مساعد دعم طيران الخليج') }}<time>{{ message.timestamp | date:'shortTime' }}</time></div>
+                  <div class="message-bubble" [class.customer-bubble]="message.role === 'user'"><p>{{ message.content }}</p></div>
+                </div>
+              </article>
+            }
+            <span #eot></span>
           </div>
-        </brn-popover>
+          <div class="composer-wrap">
+            @if (chatService.isLoading()) { <div class="typing-state"><span></span><span></span><span></span> Checking support guidance…</div> }
+            <div class="composer">
+              <textarea
+                aria-label="Write a support message"
+                rows="1"
+                [placeholder]="selectedLanguage() === 'ar' ? 'اكتب رسالتك أو اسأل عن رحلتك...' : 'Ask about your booking, flight, baggage, refund, or anything else…'"
+                [(ngModel)]="chatService.userMessage"
+                (keydown.enter)="submitMessage($event)"
+                [disabled]="chatService.isLoading()"
+              ></textarea>
+              <button class="send-button" type="button" [disabled]="chatService.isLoading() || !chatService.userMessage().trim()" (click)="submitMessage($event)" aria-label="Send message">➤</button>
+            </div>
+            <div class="composer-footer"><span>{{ tr('AI-assisted · Review important changes before confirming', 'مساعدة بالذكاء الاصطناعي · راجع التغييرات قبل التأكيد') }}</span><button class="human-link" type="button" (click)="requestHumanHandoff()">{{ tr('Prepare handoff summary', 'إعداد ملخص للتحويل') }}</button></div>
+          </div>
+        </section>
+
+        <aside class="right-rail" aria-label="Copilot recommendations">
+          @if (selectedPassenger()?.bookingStatus?.toLowerCase()?.includes('delay')) {
+            <section class="panel alert-panel"><span class="eyebrow">{{ tr('Travel alert', 'تنبيه السفر') }}</span><h3>{{ selectedPassenger()?.flightNumber }} {{ tr('disruption', 'اضطراب') }}</h3><p>{{ selectedPassenger()?.bookingStatus }} · {{ tr('Review recovery options before confirming any change.', 'راجع خيارات السفر قبل تأكيد أي تغيير.') }}</p></section>
+          }
+          <section class="panel next-action-panel">
+            <span class="eyebrow">{{ tr('Copilot suggestions', 'اقتراحات المساعد') }}</span>
+            <h2>{{ tr('Next-best actions', 'الخطوات المقترحة') }}</h2>
+            <p class="suggestion-summary">{{ tr('Keep the passenger in control. These actions prepare drafts or demo flows; nothing is sent or changed automatically.', 'يبقى القرار بيد المسافر. تجهز هذه الإجراءات مسودات أو تدفقات تجريبية ولا ترسل أو تغيّر أي شيء تلقائياً.') }}</p>
+            <button class="suggestion-action primary-suggestion" type="button" (click)="insertSuggestedReply()"><span>✎</span><span><strong>{{ tr('Draft a reply', 'صياغة رد') }}</strong><small>{{ tr('Insert an editable customer response', 'إدراج رد قابل للتحرير للعميل') }}</small></span><b>›</b></button>
+            <button class="suggestion-action" type="button" (click)="showBooking()"><span>↗</span><span><strong>{{ tr('Explore flights', 'استعراض الرحلات') }}</strong><small>{{ tr('Open sample flight search', 'فتح البحث التجريبي عن الرحلات') }}</small></span><b>›</b></button>
+            <button class="suggestion-action" type="button" (click)="sendQuickAction('Please review refund eligibility for this booking using the supplied policy. Ask me only for information essential to confirm the refund route.')"><span>↩</span><span><strong>{{ tr('Review refund', 'مراجعة الاسترداد') }}</strong><small>{{ tr('Check policy and missing details', 'التحقق من السياسة والتفاصيل الناقصة') }}</small></span><b>›</b></button>
+            <button class="suggestion-action escalation-action" type="button" (click)="requestHumanHandoff()"><span>⚑</span><span><strong>{{ tr('Prepare handoff summary', 'إعداد ملخص للتحويل') }}</strong><small>{{ tr('Create a local case note for an agent', 'إنشاء ملاحظة حالة محلية للموظف') }}</small></span><b>›</b></button>
+            @if (handoffSummary()) {
+              <div class="handoff-summary" role="status">
+                <div class="panel-title-row"><strong>{{ tr('Handoff note ready', 'ملخص التحويل جاهز') }}</strong><button class="inline-link" type="button" (click)="handoffSummary.set('')">{{ tr('Dismiss', 'إغلاق') }}</button></div>
+                <p>{{ handoffSummary() }}</p>
+              </div>
+            }
+          </section>
+          <section class="panel policy-panel">
+            <div class="panel-title-row"><span class="eyebrow">Knowledge source</span><span class="confidence-pill">Grounded</span></div>
+            <h3>{{ tr('Gulf Air support guidance', 'إرشادات دعم طيران الخليج') }}</h3>
+            <p>{{ tr('Answers are grounded in the local demo policy library. Live booking, baggage, and ticketing systems are not connected.', 'تستند الإجابات إلى مكتبة السياسات التجريبية المحلية. لا يوجد اتصال مباشر بأنظمة الحجز أو الأمتعة أو إصدار التذاكر.') }}</p>
+            <div class="source-reference">{{ tr('Source files: Gulf Air policies · Baggage · Refund · Check-in · FalconFlyer', 'ملفات المصدر: سياسات طيران الخليج · الأمتعة · الاسترداد · إنهاء إجراءات السفر · فلاي فلاير') }}</div>
+            <div class="approval-note"><span>!</span><p>{{ tr('Refunds, compensation, and booking changes require agent/customer confirmation. Sensitive cases should be handled by a person.', 'تتطلب المبالغ المستردة والتعويضات وتغييرات الحجز تأكيد الموظف أو العميل. يجب أن يتولى الموظف الحالات الحساسة.') }}</p></div>
+          </section>
+          <section class="panel service-health">
+            <div class="panel-title-row"><span class="eyebrow">Service status</span><span class="health-chip">Demo environment</span></div>
+            <div class="health-row"><span>Operational activity</span><strong>{{ dashboardStats['operationalStatus'] || 'Sample data' }}</strong></div>
+            <div class="health-row"><span>Policy library</span><strong>{{ dashboardStats['policyCoverage'] || 99 }}%</strong></div>
+            <small>{{ tr('Metrics describe repository sample data, not live airline operations. Human routing is not connected.', 'المؤشرات مبنية على بيانات تجريبية وليست عمليات مباشرة. لا يوجد اتصال فعلي بتحويل المحادثة إلى موظف.') }}</small>
+          </section>
+        </aside>
       </section>
-    </div>
-  </div>
-</div>
+    }
+  }
+</main>

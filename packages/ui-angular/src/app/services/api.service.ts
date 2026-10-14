@@ -59,6 +59,22 @@ export interface ChatMessage {
   }[];
 }
 
+export interface SupportContext {
+  bookingReference?: string;
+  passengerName?: string;
+  flightNumber?: string;
+  origin?: string;
+  destination?: string;
+  falconFlyerTier?: string;
+  bookingStatus?: string;
+  preferredLanguage?: 'en' | 'ar';
+}
+
+export interface ConversationTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -147,7 +163,12 @@ export class ApiService {
     }
   }
 
-  stream(message: string, tools: Tools[]) {
+  stream(
+    message: string,
+    tools: Tools[],
+    customerContext: SupportContext = {},
+    conversationHistory: ConversationTurn[] = [],
+  ) {
     // Reset trackers for each new stream
     this.lastProcessedIndex = 0;
     this.incompleteJsonBuffer = '';
@@ -155,7 +176,7 @@ export class ApiService {
     return this.http
       .post(
         `${this.apiUrl}/api/chat`,
-        { message, tools },
+        { message, tools, customerContext, conversationHistory },
         {
           responseType: 'text',
           observe: 'events',
