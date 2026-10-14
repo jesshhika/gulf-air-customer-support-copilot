@@ -34,7 +34,7 @@ export const setupAgents = async (
   const mcpToolsConfig = McpToolsConfig();
 
   // Create agents based on available tools
-  if (tools["echo-ping"]) {
+  if (tools["echo-ping"] && mcpToolsConfig["echo-ping"]) {
     const mcpServerConfig = mcpToolsConfig["echo-ping"];
     const echoTools = await createMcpTools(mcpServerConfig);
     
@@ -59,7 +59,7 @@ export const setupAgents = async (
     mcpTools.push(...echoTools);
   }
 
-  if (tools["customer-query"]) {
+  if (tools["customer-query"] && mcpToolsConfig["customer-query"]) {
     const mcpServerConfig = mcpToolsConfig["customer-query"];
     const customerTools = await createMcpTools(mcpServerConfig);
 
@@ -108,7 +108,7 @@ Always provide responses using Gulf Air policies and procedures.
     mcpTools.push(...customerTools);
   }
 
-  if (tools["itinerary-planning"]) {
+  if (tools["itinerary-planning"] && mcpToolsConfig["itinerary-planning"]) {
     const mcpServerConfig = mcpToolsConfig["itinerary-planning"];
     const itineraryTools = await createMcpTools(mcpServerConfig);
 
@@ -141,7 +141,7 @@ Provide responses using passenger records and operational flight information.
     mcpTools.push(...itineraryTools);
   }
 
-  if (tools["destination-recommendation"]) {
+  if (tools["destination-recommendation"] && mcpToolsConfig["destination-recommendation"]) {
     const mcpServerConfig = mcpToolsConfig["destination-recommendation"];
     const destinationTools = await createMcpTools(mcpServerConfig);
 

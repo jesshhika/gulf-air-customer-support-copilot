@@ -11,42 +11,30 @@ const AZURE_COGNITIVE_SERVICES_SCOPE =
 export const llm = async () => {
   console.log("Using Azure OpenAI");
 
-  const isRunningInLocalDocker =
-    process.env.IS_LOCAL_DOCKER_ENV === "true";
+  const apiKey = process.env.AZURE_OPENAI_API_KEY;
+  const deploymentName =
+    process.env.AZURE_OPENAI_DEPLOYMENT_NAME ??
+    process.env.AZURE_OPENAI_DEPLOYMENT ??
+    process.env.AZURE_AT_MODEL_DEPLOYMENT_NAME;
+  const apiVersion =
+    process.env.AZURE_OPENAI_API_VERSION ?? "2025-04-01-preview";
 
-  console.log(
-    "Azure Endpoint:",
-    process.env.AZURE_OPENAI_ENDPOINT
-  );
+  if (!deploymentName) {
+    throw new Error(
+      "Azure OpenAI deployment is not configured. Set AZURE_OPENAI_DEPLOYMENT_NAME."
+    );
+  }
 
-  console.log(
-    "Azure Deployment:",
-    process.env.AZURE_OPENAI_DEPLOYMENT_NAME
-  );
-
-  console.log(
-    "Azure API Version:",
-    process.env.AZURE_OPENAI_API_VERSION
-  );
-
-  if (isRunningInLocalDocker) {
+  if (apiKey) {
     console.log(
-      "Running in local Docker environment, using Azure OpenAI API Key authentication."
+      "Using Azure OpenAI API key authentication."
     );
 
     return new AzureChatOpenAI({
-      azureOpenAIApiKey:
-        process.env.AZURE_OPENAI_API_KEY,
-
-      azureOpenAIApiDeploymentName:
-        process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
-
-      azureOpenAIApiVersion:
-        process.env.AZURE_OPENAI_API_VERSION,
-
-      azureOpenAIEndpoint:
-        process.env.AZURE_OPENAI_ENDPOINT,
-
+      azureOpenAIApiKey: apiKey,
+      azureOpenAIApiDeploymentName: deploymentName,
+      azureOpenAIApiVersion: apiVersion,
+      azureOpenAIEndpoint: process.env.AZURE_OPENAI_ENDPOINT,
       temperature: 0,
       streaming: true,
     });
@@ -76,16 +64,9 @@ export const llm = async () => {
 
   return new AzureChatOpenAI({
     azureADTokenProvider,
-
-    azureOpenAIEndpoint:
-      process.env.AZURE_OPENAI_ENDPOINT,
-
-    azureOpenAIApiDeploymentName:
-      process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
-
-    azureOpenAIApiVersion:
-      process.env.AZURE_OPENAI_API_VERSION,
-
+    azureOpenAIEndpoint: process.env.AZURE_OPENAI_ENDPOINT,
+    azureOpenAIApiDeploymentName: deploymentName,
+    azureOpenAIApiVersion: apiVersion,
     temperature: 0,
     streaming: true,
   });

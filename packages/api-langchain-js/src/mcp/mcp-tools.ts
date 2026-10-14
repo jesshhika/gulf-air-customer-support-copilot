@@ -18,9 +18,10 @@ export async function mcpToolsList(config: McpServerDefinition[]) {
   return await Promise.all(
     config.map(async ({ id, name, config }) => {
       const { url, type } = config;
-      const mcpClient = client(config);
+      let mcpClient: MCPSSEClient | MCPHTTPClient | undefined;
       
       try {
+        mcpClient = client(config);
         console.log(`Connecting to MCP server ${name} at ${url}`);
         await mcpClient.connect();
         console.log(`MCP server ${name} is reachable`);
@@ -53,7 +54,7 @@ export async function mcpToolsList(config: McpServerDefinition[]) {
         };
       }
       finally {
-        await mcpClient.cleanup();
+        await mcpClient?.cleanup();
       }
     })
   );

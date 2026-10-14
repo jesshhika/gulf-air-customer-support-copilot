@@ -110,9 +110,11 @@ Configure via environment variables:
 
 - `AZURE_OPENAI_API_KEY` - Azure OpenAI API key
 - `AZURE_OPENAI_ENDPOINT` - Azure OpenAI endpoint
-- `AZURE_OPENAI_DEPLOYMENT` - Azure OpenAI deployment name
-- `MCP_*_URL` - MCP service URLs (e.g., `MCP_CUSTOMER_QUERY_URL`)
+- `AZURE_OPENAI_DEPLOYMENT_NAME` - Azure OpenAI deployment name (`AZURE_OPENAI_DEPLOYMENT` and `AZURE_AT_MODEL_DEPLOYMENT_NAME` are also accepted)
+- `MCP_CUSTOMER_QUERY_URL`, `MCP_DESTINATION_RECOMMENDATION_URL`, `MCP_ITINERARY_PLANNING_URL`, `MCP_ECHO_PING_URL` - Base URLs for deployed MCP services
 - `MCP_*_ACCESS_TOKEN` - MCP service access tokens
+
+For Azure App Service, set each MCP URL to a base URL that the App Service can reach; the API appends `/mcp`. Do not use `localhost` for a separately hosted MCP service. Container Apps `.internal` URLs are only reachable from an appropriately network-connected environment. If an MCP service is not deployed or configured, it is omitted from the tools list; `/api/tools` remains available and chat can run without MCP tools. The Azure OpenAI client uses `AZURE_OPENAI_API_KEY` when set, otherwise it uses managed identity.
 
 See `.env.example` in the repository root for all configuration options.
 

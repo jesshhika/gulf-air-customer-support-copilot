@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -6,9 +7,10 @@ import { Injectable } from '@angular/core';
 export class DashboardService {
 
   async getDashboardStats() {
-    const response = await fetch(
-      'http://localhost:4000/api/dashboard'
-    );
+    const response = await fetch(`${environment.apiLangChainJsServer.url}/api/dashboard`);
+    if (!response.ok) {
+      throw new Error(`Dashboard request failed with status ${response.status}`);
+    }
 
     return await response.json();
   }
