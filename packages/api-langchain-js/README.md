@@ -73,6 +73,10 @@ docker run -p 4000:4000 \
   langchain-api
 ```
 
+### Azure App Service
+
+The GitHub Actions workflow at `.github/workflows/main_gulf-air-api.yml` builds this API and deploys its compiled files together with production dependencies. If deploying a prebuilt artifact manually, include the `node_modules` produced by `npm prune --omit=dev`, or configure App Service build automation to install production dependencies during deployment. Starting `dist/server.js` without either will fail with `ERR_MODULE_NOT_FOUND`.
+
 ### API Examples
 
 ```bash

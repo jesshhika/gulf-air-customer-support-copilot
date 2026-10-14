@@ -24,21 +24,21 @@ jobs:
 
       - name: Install dependencies
         working-directory: packages/api-langchain-js
-        run: |
-          npm install
+        run: npm ci
 
       - name: Build application
         working-directory: packages/api-langchain-js
         run: npm run build --if-present
 
+      - name: Remove development dependencies
+        working-directory: packages/api-langchain-js
+        run: npm prune --omit=dev
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: |
-            packages/api-langchain-js
-            !packages/api-langchain-js/node_modules
+          path: packages/api-langchain-js
 
   deploy:
     runs-on: ubuntu-latest
