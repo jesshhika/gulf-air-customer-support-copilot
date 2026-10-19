@@ -10,6 +10,15 @@ import { pipeline } from "node:stream/promises";
 import { setupAgents } from "./index.js";
 import { McpToolsConfig } from "./tools/index.js";
 import { mcpToolsList } from "./mcp/mcp-tools.js";
+import {
+  createDemoBooking,
+  createDemoSupportCase,
+  getDemoWorkflowCounts,
+  listDemoBookings,
+  listDemoSupportCases,
+  searchDemoFlights,
+  DemoWorkflowValidationError,
+} from "./demo-workflows.js";
 
 let workflowInstance: any = null;
 
@@ -93,6 +102,72 @@ apiRouter.get("/tools", async (req, res) => {
   }
 });
 
+apiRouter.post("/demo/flights/search", (req, res) => {
+  try {
+    res.status(200).json({ flights: searchDemoFlights(req.body) });
+  } catch (error) {
+    if (error instanceof DemoWorkflowValidationError) {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error("Could not search demo flights:", error);
+    res.status(500).json({ error: "Could not search demo flights." });
+  }
+});
+
+apiRouter.post("/demo/bookings", (req, res) => {
+  try {
+    if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+      throw new DemoWorkflowValidationError("A demo booking request is required.");
+    }
+    const booking = createDemoBooking(req.body);
+    res.status(201).json({ booking });
+  } catch (error) {
+    console.error("Could not create demo booking:", error);
+    const statusCode = error instanceof DemoWorkflowValidationError ? 400 : 500;
+    res.status(statusCode).json({ error: error instanceof Error ? error.message : "Could not create demo booking." });
+  }
+});
+
+apiRouter.get("/demo/bookings", (req, res) => {
+  const passengerId = req.query.passengerId;
+  if (typeof passengerId !== "string" || !/^[\w-]{1,80}$/.test(passengerId)) {
+    return res.status(400).json({ error: "A valid demo passenger profile is required." });
+  }
+  try {
+    res.status(200).json({ bookings: listDemoBookings(passengerId) });
+  } catch (error) {
+    console.error("Could not load demo bookings:", error);
+    res.status(500).json({ error: "Could not load demo bookings." });
+  }
+});
+
+apiRouter.post("/demo/cases", (req, res) => {
+  try {
+    if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+      throw new DemoWorkflowValidationError("A demo support case request is required.");
+    }
+    const supportCase = createDemoSupportCase(req.body);
+    res.status(201).json({ supportCase });
+  } catch (error) {
+    console.error("Could not create demo support case:", error);
+    const statusCode = error instanceof DemoWorkflowValidationError ? 400 : 500;
+    res.status(statusCode).json({ error: error instanceof Error ? error.message : "Could not create demo support case." });
+  }
+});
+
+apiRouter.get("/demo/cases", (req, res) => {
+  const passengerId = req.query.passengerId;
+  if (typeof passengerId !== "string" || !/^[\w-]{1,80}$/.test(passengerId)) {
+    return res.status(400).json({ error: "A valid demo passenger profile is required." });
+  }
+  try {
+    res.status(200).json({ cases: listDemoSupportCases(passengerId) });
+  } catch (error) {
+    console.error("Could not load demo support cases:", error);
+    res.status(500).json({ error: "Could not load demo support cases." });
+  }
+});
+
 
 // Dashboard statistics endpoint
 apiRouter.get("/dashboard", (req, res) => {
@@ -133,26 +208,14 @@ apiRouter.get("/dashboard", (req, res) => {
         p.unaccompaniedMinor === true
     ).length;
 
-    const proactiveAlerts = Math.max(
-      5,
-      Math.round((cancelledFlights * 3 + delayedFlights * 2 + divertedFlights) / 2)
-    );
+    const demoWorkflowCounts = getDemoWorkflowCounts();
 
-    const multilingualCoverage = 96;
-    const deflectionRate = 42;
-    const firstContactResolution = 88;
-    const csatScore = 94;
-    const loyaltyOffers = 18;
-    const priorityCases = Math.max(4, Math.ceil(highPriorityPassengers * 0.7));
-    const sensitiveEscalations = 7;
-    const policyCoverage = 99;
-
-    let operationalStatus = "Normal Operations";
+    let operationalStatus = "Sample schedule data: Normal";
 
     if (cancelledFlights >= 3) {
-      operationalStatus = "High Disruption";
+      operationalStatus = "Sample schedule data: High disruption";
     } else if (delayedFlights >= 3) {
-      operationalStatus = "Moderate Disruption";
+      operationalStatus = "Sample schedule data: Moderate disruption";
     }
 
     const response = {
@@ -162,48 +225,41 @@ apiRouter.get("/dashboard", (req, res) => {
       passengers: passengers.length,
       operationalStatus,
       highPriorityPassengers,
-      proactiveAlerts,
-      multilingualCoverage,
-      deflectionRate,
-      firstContactResolution,
-      csatScore,
-      policyCoverage,
-      loyaltyOffers,
-      priorityCases,
-      sensitiveEscalations,
-      knowledgeBaseStatus: "Grounded in Gulf Air policies, disruption rules, loyalty guidance, and passenger data",
+      demoWorkflowCounts,
+      metricScope: "Demonstration records only; no production KPIs or live airline systems are connected.",
+      knowledgeBaseStatus: "Local demo policies and sample passenger/disruption data",
       capabilities: [
         {
           title: "Agent Assist",
-          description: "Instant summaries, tone-aware drafts, and policy lookups for baggage, refunds, and compensation.",
+          description: "Policy guidance and customer-confirmed demo support-case summaries.",
         },
         {
           title: "Disruption Recovery",
-          description: "Prioritized rebooking and high-need passenger handling during delays and cancellations.",
+          description: "Sample disruption guidance and categorized demo case creation; no live rebooking.",
         },
         {
-          title: "Self-Service Automation",
-          description: "Check-in, flight status, refund status, and routine inquiries handled without agent triage.",
+          title: "Demo Flight Booking",
+          description: "Search sample schedules, confirm a simulated booking, and download a confirmation; no ticket or payment.",
         },
         {
           title: "FalconFlyer Loyalty",
-          description: "Rewards, mileage checks, status support, and upgrade or lounge offers at the right moment.",
+          description: "General policy guidance only; no live member account or benefits lookup.",
         },
         {
           title: "Arabic + English",
-          description: "Bilingual support with Gulf-aware communication in customer-facing conversations.",
+          description: "English and Arabic chat responses, subject to the configured model.",
         },
         {
-          title: "Safe Handoffs",
-          description: "Escalation workflow with full case context, risk controls, and audit logging.",
+          title: "Demo Support Cases",
+          description: "Create a reference and simulated support queue; no real support team is contacted.",
         },
       ],
       crmHighlights: [
-        "Customer 360 summary available",
-        "High-value and vulnerable passengers prioritized",
-        "Policy-grounded refund and rebooking guidance",
-        "Escalation-ready complaints, legal, medical and bereavement cases",
-        "Arabic + English response support for regional customer care",
+        `${passengers.length} sample passenger profiles`,
+        `${demoWorkflowCounts.bookings} demo bookings saved`,
+        `${demoWorkflowCounts.cases} demo support cases saved`,
+        `${demoWorkflowCounts.sensitiveCases} sensitive demo cases created`,
+        "No CRM, live reservations, payment, or agent-transfer integration",
       ],
       followUpPrompts: [
         "What is your booking reference?",
@@ -212,24 +268,24 @@ apiRouter.get("/dashboard", (req, res) => {
       ],
       supportInsights: [
         {
-          label: "Confident policy coverage",
-          value: `${policyCoverage}%`,
+          label: "Demo bookings saved",
+          value: String(demoWorkflowCounts.bookings),
           tone: "success",
         },
         {
-          label: "Revenue recovery potential",
-          value: `${Math.max(8, Math.round(loyaltyOffers * 1.3))}%`,
+          label: "Demo support cases",
+          value: String(demoWorkflowCounts.cases),
           tone: "warning",
         },
         {
-          label: "Escalation readiness",
-          value: `${sensitiveEscalations} critical workflows`,
+          label: "Sensitive demo cases",
+          value: String(demoWorkflowCounts.sensitiveCases),
           tone: "danger",
         },
       ],
       assistantMode: {
         language: "English / Arabic",
-        workflow: "Agent assist and escalation-first support",
+        workflow: "Customer-confirmed demo bookings and support cases",
         requiresClarification: true,
         safeEscalation: true,
         followUpStrategy: "Ask only the minimum required questions before finalising a recommendation",

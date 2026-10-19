@@ -97,10 +97,14 @@
           <label>{{ tr('Cabin', 'الدرجة') }}
             <select name="bookingCabin" [(ngModel)]="bookingCabin"><option>Economy</option><option>Falcon Gold</option></select>
           </label>
-          <button class="primary-button search-button" type="submit">{{ tr('Search flights', 'البحث عن رحلات') }}</button>
+          <button class="primary-button search-button" type="submit" [disabled]="isSearchingFlights()">{{ isSearchingFlights() ? tr('Searching…', 'جارٍ البحث…') : tr('Search flights', 'البحث عن رحلات') }}</button>
         </form>
         <p class="demo-note booking-demo-note">{{ tr('Schedules and prices below are sample data, not live inventory. Confirming creates a local demo reference only; no payment or ticket is issued.', 'الجداول والأسعار بيانات تجريبية وليست مقاعد متاحة مباشرة. التأكيد ينشئ مرجعاً تجريبياً محلياً فقط ولا يصدر تذكرة أو يجري دفعاً.') }}</p>
         @if (bookingConfirmation()) { <div class="booking-confirmation" role="status">{{ bookingConfirmation() }}</div> }
+        @if (bookingError()) { <p class="form-error" role="alert">{{ bookingError() }}</p> }
+        @if (latestDemoBooking()) {
+          <button class="secondary-button" type="button" (click)="downloadBookingConfirmation(latestDemoBooking()!)">{{ tr('Download booking confirmation', 'تنزيل تأكيد الحجز') }}</button>
+        }
         @if (flightOptions().length) {
           <div class="flight-results">
             <div class="results-heading"><h2>{{ flightOptions().length }} {{ tr('sample departures', 'رحلات تجريبية') }}</h2><span>{{ bookingOrigin }} → {{ bookingDestination }} · {{ bookingTravelers }} {{ tr('passenger(s)', 'مسافر/مسافرين') }} · {{ bookingCabin }}</span></div>
@@ -108,11 +112,21 @@
               <article class="flight-card">
                 <div class="flight-number"><strong>{{ flight.flightNumber }}</strong><small>{{ tr('Gulf Air · ', 'طيران الخليج · ') }}{{ flight.fare }} {{ tr('fare', 'الدرجة') }}</small></div>
                 <div class="flight-time"><strong>{{ flight.departure }}</strong><span>{{ flight.duration }}</span><strong>{{ flight.arrival }}</strong></div>
-                <div class="flight-price"><strong>{{ flight.price * bookingTravelers }} BHD</strong><small>{{ tr('sample total', 'الإجمالي التجريبي') }}</small></div>
-                <button class="primary-button" type="button" (click)="confirmDemoBooking(flight)">{{ tr('Select flight', 'اختيار الرحلة') }}</button>
+                <div class="flight-price"><strong>{{ flight.totalPrice }} BHD</strong><small>{{ tr('sample total', 'الإجمالي التجريبي') }}</small></div>
+                <button class="primary-button" type="button" [disabled]="isCreatingBooking()" (click)="selectDemoFlight(flight)">{{ tr('Review flight', 'مراجعة الرحلة') }}</button>
               </article>
             }
           </div>
+        }
+        @if (selectedDemoFlight()) {
+          <section class="panel booking-review" aria-label="Review demo booking">
+            <span class="eyebrow">{{ tr('Review before confirming', 'راجع قبل التأكيد') }}</span>
+            <h2>{{ selectedDemoFlight()?.flightNumber }} · {{ selectedDemoFlight()?.origin }} → {{ selectedDemoFlight()?.destination }}</h2>
+            <p>{{ selectedDemoFlight()?.departureDate }} · {{ selectedDemoFlight()?.departureTime }} · {{ selectedDemoFlight()?.passengers }} {{ tr('passenger(s)', 'مسافر/مسافرين') }} · {{ selectedDemoFlight()?.cabin }} · {{ selectedDemoFlight()?.fare }} {{ tr('fare', 'الدرجة') }}</p>
+            <p><strong>{{ selectedDemoFlight()?.totalPrice }} BHD</strong> {{ tr('sample total. Confirming saves a simulated booking only; no ticket or payment is issued.', 'الإجمالي التجريبي. يؤدي التأكيد إلى حفظ حجز محاكى فقط دون إصدار تذكرة أو تحصيل دفعة.') }}</p>
+            <button class="secondary-button" type="button" (click)="selectedDemoFlight.set(null)">{{ tr('Choose another flight', 'اختيار رحلة أخرى') }}</button>
+            <button class="primary-button" type="button" [disabled]="isCreatingBooking()" (click)="confirmDemoBooking(selectedDemoFlight()!)">{{ isCreatingBooking() ? tr('Confirming…', 'جارٍ التأكيد…') : tr('Confirm demo booking', 'تأكيد الحجز التجريبي') }}</button>
+          </section>
         }
       </section>
     } @else {
@@ -140,9 +154,20 @@
 
           <section class="panel">
             <span class="eyebrow">{{ tr('Open & past cases', 'الحالات السابقة والحالية') }}</span>
+            @if (demoWorkflowError()) { <p class="form-error" role="alert">{{ demoWorkflowError() }}</p> }
+            @if (demoCases().length) {
+              <ul class="compact-list">
+                @for (supportCase of demoCases(); track supportCase.caseId) {
+                  <li>
+                    <strong>{{ supportCase.caseId }}</strong> · {{ supportCase.category }} · {{ supportCase.status }}
+                    <button class="inline-link" type="button" (click)="downloadCaseSummary(supportCase)">{{ tr('Download summary', 'تنزيل الملخص') }}</button>
+                  </li>
+                }
+              </ul>
+            }
             @if (selectedPassenger()?.cases?.length) {
               <ul class="compact-list">@for (item of selectedPassenger()?.cases; track item) { <li>{{ item }}</li> }</ul>
-            } @else { <p class="muted-text small">No previous cases in this demo profile.</p> }
+            } @else if (!demoCases().length) { <p class="muted-text small">No previous cases in this demo profile.</p> }
           </section>
 
           <section class="panel">
@@ -225,6 +250,17 @@
               <div class="handoff-summary" role="status">
                 <div class="panel-title-row"><strong>{{ tr('Handoff note ready', 'ملخص التحويل جاهز') }}</strong><button class="inline-link" type="button" (click)="handoffSummary.set('')">{{ tr('Dismiss', 'إغلاق') }}</button></div>
                 <p>{{ handoffSummary() }}</p>
+                <p class="muted-text small">{{ tr('Creating this case stores it in the demo support queue only. It does not contact Gulf Air or transfer you to an agent. Do not include passport or payment details.', 'يُحفظ هذا الطلب في قائمة الدعم التجريبية فقط، ولا يتواصل مع طيران الخليج أو يحولك إلى موظف. لا تُدرج بيانات جواز السفر أو الدفع.') }}</p>
+                @if (handoffError()) { <p class="form-error" role="alert">{{ handoffError() }}</p> }
+                <button class="secondary-button" type="button" [disabled]="isCreatingCase()" (click)="createDemoCase()">{{ isCreatingCase() ? tr('Creating demo case…', 'جارٍ إنشاء الحالة التجريبية…') : tr('Confirm and create demo case', 'تأكيد وإنشاء حالة تجريبية') }}</button>
+              </div>
+            }
+            @if (createdDemoCase()) {
+              <div class="handoff-summary" role="status">
+                <strong>{{ tr('Demo case created', 'تم إنشاء الحالة التجريبية') }} · {{ createdDemoCase()?.caseId }}</strong>
+                <p>{{ createdDemoCase()?.status }} · {{ createdDemoCase()?.assignedQueue }}</p>
+                <button class="secondary-button" type="button" (click)="downloadCaseSummary(createdDemoCase()!)">{{ tr('Download case summary', 'تنزيل ملخص الحالة') }}</button>
+                <p class="muted-text small">{{ tr('This is recorded in the demo service only; no support team has received it.', 'سُجلت هذه الحالة في خدمة العرض فقط ولم يتلقها أي فريق دعم.') }}</p>
               </div>
             }
           </section>
@@ -238,8 +274,8 @@
           <section class="panel service-health">
             <div class="panel-title-row"><span class="eyebrow">Service status</span><span class="health-chip">Demo environment</span></div>
             <div class="health-row"><span>Operational activity</span><strong>{{ dashboardStats['operationalStatus'] || 'Sample data' }}</strong></div>
-            <div class="health-row"><span>Policy library</span><strong>{{ dashboardStats['policyCoverage'] || 99 }}%</strong></div>
-            <small>{{ tr('Metrics describe repository sample data, not live airline operations. Human routing is not connected.', 'المؤشرات مبنية على بيانات تجريبية وليست عمليات مباشرة. لا يوجد اتصال فعلي بتحويل المحادثة إلى موظف.') }}</small>
+            <div class="health-row"><span>Policy library</span><strong>{{ dashboardStats['knowledgeBaseStatus'] || 'Local demo policies' }}</strong></div>
+            <small>{{ tr('Sample data only. These are not production KPIs; no live airline system or human support queue is connected.', 'بيانات تجريبية فقط وليست مؤشرات أداء فعلية. لا يوجد اتصال بأنظمة الطيران أو بقائمة انتظار دعم بشرية.') }}</small>
           </section>
         </aside>
       </section>

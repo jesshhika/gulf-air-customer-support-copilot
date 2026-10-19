@@ -45,6 +45,7 @@ export default withMermaid({
         items: [
           { text: "MCP Servers", link: "/mcp-servers.md" },
           { text: "Development Guide", link: "/development-guide.md" },
+          { text: "Gulf Air Customer Support Copilot", link: "/gulf-air-customer-support-agent.md" },
         ],
       },
       {
@@ -135,6 +136,10 @@ export default withMermaid({
           {
             text: "MCP Servers",
             link: "/mcp-servers.md",
+          },
+          {
+            text: "Gulf Air Customer Support Copilot",
+            link: "/gulf-air-customer-support-agent.md",
           },
           {
             text: "Development Guide",

@@ -417,6 +417,7 @@ dist
 .env
 .env.*
 !.env.sample
+packages/api-langchain-js/data/demo-workflows.json
 .azure
 .DS_Store
 

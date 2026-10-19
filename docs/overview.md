@@ -15,6 +15,7 @@ This directory contains comprehensive technical documentation for architects, de
 ### Implementation Guides
 - **[MCP Server Implementation](./mcp-servers.md)** - Detailed guide for Model Context Protocol servers across multiple languages
 - **[Development Guide](./development-guide.md)** - Comprehensive developer onboarding and contribution guide
+- **[Gulf Air Customer Support Copilot](./gulf-air-customer-support-agent.md)** - Capabilities, runtime behavior, API contract, data boundaries, and prompt library
 
 ### Operations & Deployment
 - **[Deployment Architecture](./deployment-architecture.md)** - Infrastructure, deployment strategies, and production configurations

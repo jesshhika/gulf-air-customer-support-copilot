@@ -5,7 +5,7 @@ import {
   HttpEventType
 } from '@angular/common/http';
 import { inject, Injectable, NgZone } from '@angular/core';
-import { BehaviorSubject, catchError, distinct, filter, startWith, switchMap } from 'rxjs';
+import { BehaviorSubject, catchError, distinct, filter, firstValueFrom, startWith, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export type ServerID =
@@ -73,6 +73,45 @@ export interface SupportContext {
 export interface ConversationTurn {
   role: 'user' | 'assistant';
   content: string;
+}
+
+export interface DemoFlightSearch {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  passengers: number;
+  cabin: 'Economy' | 'Falcon Gold';
+}
+
+export interface DemoFlightOption extends DemoFlightSearch {
+  flightNumber: string;
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
+  fare: string;
+  pricePerPassenger: number;
+  totalPrice: number;
+}
+
+export interface DemoBooking extends DemoFlightOption {
+  bookingReference: string;
+  passengerId: string;
+  passengerName: string;
+  status: 'Confirmed (demo)';
+  createdAt: string;
+}
+
+export interface DemoSupportCase {
+  caseId: string;
+  passengerId: string;
+  passengerName: string;
+  bookingReference?: string;
+  flightNumber?: string;
+  category: 'Disruption' | 'Baggage' | 'Refund' | 'Check-in' | 'FalconFlyer' | 'Special assistance' | 'Sensitive escalation' | 'Other';
+  description: string;
+  assignedQueue: string;
+  status: 'Created (demo only - not sent)';
+  createdAt: string;
 }
 
 @Injectable({
@@ -242,6 +281,56 @@ export class ApiService {
         filter((state) => state !== null),
         startWith<any>({ type: 'START', id: Date.now() }),
       );
+  }
+
+  async searchDemoFlights(search: DemoFlightSearch): Promise<DemoFlightOption[]> {
+    const response = await firstValueFrom(
+      this.http.post<{ flights: DemoFlightOption[] }>(`${this.apiUrl}/api/demo/flights/search`, search),
+    );
+    return response.flights;
+  }
+
+  async createDemoBooking(input: {
+    passengerId: string;
+    passengerName: string;
+    flight: DemoFlightOption;
+  }): Promise<DemoBooking> {
+    const response = await firstValueFrom(
+      this.http.post<{ booking: DemoBooking }>(`${this.apiUrl}/api/demo/bookings`, input),
+    );
+    return response.booking;
+  }
+
+  async getDemoBookings(passengerId: string): Promise<DemoBooking[]> {
+    const response = await firstValueFrom(
+      this.http.get<{ bookings: DemoBooking[] }>(
+        `${this.apiUrl}/api/demo/bookings?passengerId=${encodeURIComponent(passengerId)}`,
+      ),
+    );
+    return response.bookings;
+  }
+
+  async createDemoSupportCase(input: {
+    passengerId: string;
+    passengerName: string;
+    bookingReference?: string;
+    flightNumber?: string;
+    category: DemoSupportCase['category'];
+    description: string;
+  }): Promise<DemoSupportCase> {
+    const response = await firstValueFrom(
+      this.http.post<{ supportCase: DemoSupportCase }>(`${this.apiUrl}/api/demo/cases`, input),
+    );
+    return response.supportCase;
+  }
+
+  async getDemoSupportCases(passengerId: string): Promise<DemoSupportCase[]> {
+    const response = await firstValueFrom(
+      this.http.get<{ cases: DemoSupportCase[] }>(
+        `${this.apiUrl}/api/demo/cases?passengerId=${encodeURIComponent(passengerId)}`,
+      ),
+    );
+    return response.cases;
   }
 
   private handleApiError(error: unknown, statusCode: number) {

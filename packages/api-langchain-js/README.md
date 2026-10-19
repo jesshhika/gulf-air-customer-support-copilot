@@ -51,6 +51,22 @@ Chat endpoint with streaming support
 
 The passenger and flight data in this repository is for local demonstration only. It is not a live reservations, ticketing, check-in, baggage, payment, or CRM integration. Do not pass passport or payment details.
 
+### End-to-end demo workflows
+
+The LangChain.js API provides server-backed **demo-only** workflows for flight search, booking confirmation, and support-case intake:
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/api/demo/flights/search` | Search sample schedules by route, date, passenger count, and cabin |
+| `POST` | `/api/demo/bookings` | Confirm a simulated booking and generate a demo reference |
+| `GET` | `/api/demo/bookings?passengerId=<profile-id>` | Retrieve that demo profile's saved bookings |
+| `POST` | `/api/demo/cases` | Create a support case in a simulated queue |
+| `GET` | `/api/demo/cases?passengerId=<profile-id>` | Retrieve that demo profile's support cases |
+
+The UI can download a plain-text itinerary confirmation or case summary after creation. Demo cases have a reference, category, simulated queue, and status; they are **not sent to Gulf Air or a human support team**. Demo bookings do not reserve inventory, issue a ticket, or charge payment.
+
+Records are stored as JSON at `DEMO_WORKFLOWS_FILE` (default: `data/demo-workflows.json` relative to the API working directory). The containing directory must be writable. This file-based store is intended for a single-instance demonstration only; configure a shared persistent database and proper passenger authentication/authorization before production or multi-instance deployment. Local demo records can contain passenger names and case summaries, so do not enter passport, payment, or other sensitive information.
+
 ## Usage
 
 ### Running the Server
